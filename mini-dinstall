@@ -560,9 +560,8 @@ class IncomingDir(threading.Thread):
         return ret
 
     def _changefile_ready(self, changefilename, changefile):
-        try:
-            dist = changefile['distribution']
-        except KeyError, e:
+        dist = changefile.get('distribution', None)
+        if dist is None:
             self._logger.warn("Unable to read distribution field for \"%s\"; data: %s" % (changefilename, changefile,))
             return 0
         try:
@@ -572,7 +571,9 @@ class IncomingDir(threading.Thread):
         return 1
 
     def _install_changefile(self, changefilename, changefile, doing_reprocess):
-        changefiledist = changefile['distribution']
+        changefiledist = changefile.get('distribution', None)
+        if changefiledist is None:
+            return
         for dist in distributions.keys():
             distributions[dist] = distoptionhandler.get_option_map(dist)
             if distributions[dist]['alias'] != None and changefiledist in distributions[dist]['alias']:
@@ -594,7 +595,7 @@ class IncomingDir(threading.Thread):
             logger.debug('Finished processing %s' % (changefilename))
 
     def _reject_changefile(self, changefilename, changefile, e):
-        dist = changefile['distribution']
+        dist = changefile.get('distribution', None)
         if not dist in self._archivemap:
             raise DinstallException('Unknown distribution "%s" in \"%s\"' % (dist, changefilename,))
         self._archivemap[dist][0].reject(changefilename, changefile, e)
